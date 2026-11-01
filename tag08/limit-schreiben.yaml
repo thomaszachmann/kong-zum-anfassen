@@ -1,0 +1,15 @@
+# limit-schreiben.yaml – Schreiben: 3 pro Minute je Consumer, Zähler in Postgres (Tag 8)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $..routes[?(@.name=="notes-schreiben")]
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 3
+          policy: cluster
+          limit_by: consumer
+      - name: request-size-limiting
+        config:
+          allowed_payload_size: 1
+          size_unit: kilobytes

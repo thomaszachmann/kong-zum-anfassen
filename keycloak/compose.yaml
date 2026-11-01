@@ -1,0 +1,26 @@
+# keycloak/compose.yaml – Keycloak im Entwicklungsmodus mit Realm lab (Tag 6)
+name: keycloak
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.8.1
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: lab-admin-pw-123
+      KC_HOSTNAME: http://localhost:8180   # fester Aussteller (iss) in jedem Token
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./realm-lab.json:/opt/keycloak/data/import/realm-lab.json:ro
+    ports:
+      - "127.0.0.1:8180:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /health/ready HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+networks:
+  default:
+    name: lab
+    external: true

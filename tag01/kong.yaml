@@ -1,0 +1,9 @@
+# kong.yaml – Stand Ende Tag 1
+_format_version: "3.0"
+services:
+  - name: echo
+    url: http://echo:8080
+    routes:
+      - name: echo
+        paths:
+          - /echo

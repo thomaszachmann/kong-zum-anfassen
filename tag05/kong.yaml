@@ -1,0 +1,120 @@
+# kong.yaml – Stand Ende Tag 5 (von decK geschrieben)
+_format_version: "3.0"
+consumers:
+- acls:
+  - group: schreiber
+  - group: admins
+  basicauth_credentials:
+  - password: lab-user-pw-123
+    username: anna
+  keyauth_credentials:
+  - key: lab-key-anna-123
+  username: anna
+- acls:
+  - group: leser
+  keyauth_credentials:
+  - key: lab-key-ben-123
+  username: ben
+plugins:
+- config:
+    echo_downstream: true
+    generator: uuid
+    header_name: X-Correlation-ID
+  name: correlation-id
+services:
+- name: echo
+  routes:
+  - name: echo
+    paths:
+    - /echo
+  - hosts:
+    - echo.lab
+    name: echo-host
+    preserve_host: true
+  url: http://echo:8080
+- connect_timeout: 2000
+  name: notes
+  plugins:
+  - config:
+      headers:
+      - Content-Type
+      - X-API-Key
+      max_age: 600
+      methods:
+      - GET
+      - POST
+      origins:
+      - http://localhost:3000
+    name: cors
+  read_timeout: 10000
+  routes:
+  - methods:
+    - GET
+    - OPTIONS
+    name: notes-lesen
+    paths:
+    - /api/v1/notes
+  - methods:
+    - POST
+    name: notes-schreiben
+    paths:
+    - /api/v1/notes
+    plugins:
+    - config:
+        hide_credentials: true
+      name: key-auth
+    - config:
+        allow:
+        - schreiber
+      name: acl
+    - config:
+        add:
+          headers:
+          - X-API-Key:lab-api-key-123
+        remove:
+          headers:
+          - X-API-Key
+      name: request-transformer
+  tags:
+  - team-notes
+  url: http://notes-api:8080/notes
+- connect_timeout: 2000
+  name: notes-version
+  read_timeout: 10000
+  routes:
+  - methods:
+    - GET
+    name: notes-version
+    paths:
+    - /api/v1/version
+  tags:
+  - team-notes
+  url: http://notes-api:8080/version
+- name: api-rest
+  routes:
+  - name: api-rest
+    paths:
+    - /api
+  url: http://echo:8080/anything
+- name: whoami
+  plugins:
+  - name: key-auth
+  routes:
+  - name: whoami
+    paths:
+    - /whoami
+  url: http://echo:8080/anything
+- name: admin-api
+  plugins:
+  - config:
+      hide_credentials: true
+    name: basic-auth
+  - config:
+      allow:
+      - admins
+    name: acl
+  routes:
+  - name: admin-api
+    paths:
+    - /admin-api
+  url: http://127.0.0.1:8001

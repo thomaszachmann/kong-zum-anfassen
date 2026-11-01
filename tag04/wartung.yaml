@@ -1,0 +1,11 @@
+# wartung.yaml – Schreiben abschalten, vorerst inaktiv (Tag 4)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $..routes[?(@.name=="notes-schreiben")]
+    plugins:
+      - name: request-termination
+        enabled: false
+        config:
+          status_code: 503
+          message: "Wartung bis 18 Uhr"

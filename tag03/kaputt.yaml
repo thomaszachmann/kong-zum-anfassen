@@ -1,0 +1,11 @@
+# kaputt.yaml – drei Fehler für Tag 3, Drill 3
+_format_version: "3.0"
+services:
+  - name: echo
+    url: http://echo:8080
+    routes:
+      - name: echo
+        pathes: [/echo]
+  - name: notes
+    url: htp://notes-api:8080
+    read_timeout: -5

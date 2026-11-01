@@ -1,0 +1,12 @@
+# echo.yaml – Plugin nur am Service echo (Tag 4)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $.services[?(@.name=="echo")]
+    plugins:
+      - name: request-transformer
+        config:
+          add:
+            headers: ["X-Ebene:service"]
+          remove:
+            headers: ["User-Agent"]

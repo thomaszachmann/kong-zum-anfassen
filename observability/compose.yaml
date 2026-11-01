@@ -1,0 +1,30 @@
+# observability/compose.yaml – Prometheus, Grafana und Jaeger für Kong (Tag 12)
+name: observability
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+
+  grafana:
+    image: grafana/grafana:13.2.5
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: lab-admin-pw-123
+    volumes:
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  jaeger:
+    image: jaegertracing/jaeger:2.22.0
+    ports:
+      - "127.0.0.1:16686:16686"   # Oberfläche; OTLP (4318) nur im Netz lab
+
+networks:
+  default:
+    name: lab
+    external: true

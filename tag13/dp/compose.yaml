@@ -1,0 +1,39 @@
+# dp/compose.yaml – entfernte Data Plane mit eigenem Backend auf der VM dp (Tag 13)
+name: kong-dp
+
+services:
+  kong-dp:
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    environment:
+      KONG_ROLE: data_plane
+      KONG_DATABASE: "off"
+      KONG_CLUSTER_CONTROL_PLANE: ${CP_ADDR:?CP_ADDR fehlt, z. B. 192.168.64.7:8005}
+      KONG_CLUSTER_CERT: /kong/cluster/cluster.crt
+      KONG_CLUSTER_CERT_KEY: /kong/cluster/cluster.key
+      KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
+      KONG_STATUS_LISTEN: "0.0.0.0:8100"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_PLUGINS: ${DP_PLUGINS:-bundled}
+      KONG_LUA_PACKAGE_PATH: /kong-plugins/?.lua;;
+    ulimits:
+      nofile: 65536
+    volumes:
+      - ./cluster:/kong/cluster:ro
+      - ../plugins:/kong-plugins:ro
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8100:8100"
+
+  # Backend am zweiten Standort: notes-api ohne Datenbank (Speicherbetrieb), echo
+  notes-api:
+    image: notes-api:0.2.0
+    environment:
+      NOTES_API_KEY: lab-api-key-123
+  notes-api-2:
+    image: notes-api:0.3.0
+    environment:
+      NOTES_API_KEY: lab-api-key-123
+  echo:
+    image: ghcr.io/mccutchen/go-httpbin:2.26.0

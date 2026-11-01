@@ -1,0 +1,107 @@
+# kong/compose.yaml – Hybrid: Control Plane mit Postgres, lokale Data Plane (Stand Tag 13)
+name: kong
+
+x-kong-db: &kong-db
+  KONG_DATABASE: postgres
+  KONG_PG_HOST: kong-db
+  KONG_PG_USER: kong
+  KONG_PG_PASSWORD: lab-kong-pw-123
+  KONG_PG_DATABASE: kong
+
+x-kong-common: &kong-common
+  KONG_PROXY_ACCESS_LOG: /dev/stdout
+  KONG_PROXY_ERROR_LOG: /dev/stderr
+  KONG_ADMIN_ACCESS_LOG: /dev/stdout
+  KONG_ADMIN_ERROR_LOG: /dev/stderr
+  KONG_PLUGINS: bundled,jwt-identity
+  KONG_LUA_PACKAGE_PATH: /kong-plugins/?.lua;;
+  KONG_CLUSTER_CERT: /kong/cluster/cluster.crt
+  KONG_CLUSTER_CERT_KEY: /kong/cluster/cluster.key
+
+services:
+  kong-db:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: lab-kong-pw-123
+      POSTGRES_DB: kong
+    volumes:
+      - kong-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kong-migrations:
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    command: ["kong", "migrations", "bootstrap"]
+    environment: *kong-db
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    restart: "no"
+
+  kong:                       # Control Plane: Admin API, Kong Manager, kein Proxy
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    environment:
+      <<: [*kong-db, *kong-common]
+      KONG_ROLE: control_plane
+      KONG_CLUSTER_LISTEN: "0.0.0.0:8005"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
+      KONG_STATUS_LISTEN: "0.0.0.0:8100"
+    ulimits:
+      nofile: 65536
+    volumes:
+      - .:/kong:ro
+      - ../plugins:/kong-plugins:ro
+    ports:
+      - "8005:8005"             # Data Planes verbinden sich hierher
+      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:8002:8002"
+    depends_on:
+      kong-migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  kong-dp:                    # lokale Data Plane: Proxy ohne Datenbank
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    environment:
+      <<: *kong-common
+      KONG_ROLE: data_plane
+      KONG_DATABASE: "off"
+      KONG_CLUSTER_CONTROL_PLANE: kong:8005
+      KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
+      KONG_STATUS_LISTEN: "0.0.0.0:8100"
+      KONG_TRACING_INSTRUMENTATIONS: all
+      KONG_TRACING_SAMPLING_RATE: "1.0"
+    ulimits:
+      nofile: 65536
+    volumes:
+      - ./cluster:/kong/cluster:ro
+      - ../plugins:/kong-plugins:ro
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8100:8100"
+    depends_on:
+      kong:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  kong-data:
+
+networks:
+  default:
+    name: lab
+    external: true

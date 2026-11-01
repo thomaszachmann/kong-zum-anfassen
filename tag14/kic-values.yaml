@@ -1,0 +1,11 @@
+# kic-values.yaml – Kong Ingress Controller mit festen Versionen (Tag 14)
+controller:
+  ingressController:
+    image:
+      tag: "3.5.14"
+gateway:
+  image:
+    repository: kong
+    tag: "3.9.3"        # bewusst eine Version zurück: Upgrade in Drill 7
+  env:
+    plugins: bundled

@@ -1,0 +1,9 @@
+# nur-jwt.yaml – jwt zusätzlich an whoami (Tag 6)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $.services[?(@.name=="whoami")]
+    plugins:
+      - name: jwt
+        config:
+          claims_to_verify: [exp]

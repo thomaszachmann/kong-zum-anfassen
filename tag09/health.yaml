@@ -1,0 +1,17 @@
+# health.yaml – aktive Health Checks für den Upstream notes-up (Tag 9)
+_format_version: "1.0"
+patches:
+  - selectors:
+      - $.upstreams[?(@.name=="notes-up")]
+    values:
+      healthchecks:
+        active:
+          http_path: /healthz
+          healthy:
+            interval: 2
+            successes: 1
+          unhealthy:
+            interval: 2
+            http_failures: 2
+            tcp_failures: 2
+            timeouts: 2

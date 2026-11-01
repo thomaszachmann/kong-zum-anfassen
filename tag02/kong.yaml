@@ -1,0 +1,40 @@
+# kong.yaml – Stand Ende Tag 2
+_format_version: "3.0"
+services:
+  - name: echo
+    url: http://echo:8080
+    routes:
+      - name: echo
+        paths:
+          - /echo
+      - name: echo-host
+        hosts:
+          - echo.lab
+        preserve_host: true
+  - name: notes
+    url: http://notes-api:8080/notes
+    routes:
+      - name: notes-lesen
+        paths:
+          - /api/v1/notes
+        methods:
+          - GET
+      - name: notes-schreiben
+        paths:
+          - /api/v1/notes
+        methods:
+          - POST
+  - name: notes-version
+    url: http://notes-api:8080/version
+    routes:
+      - name: notes-version
+        paths:
+          - /api/v1/version
+        methods:
+          - GET
+  - name: api-rest
+    url: http://echo:8080/anything
+    routes:
+      - name: api-rest
+        paths:
+          - /api

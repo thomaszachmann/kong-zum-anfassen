@@ -1,0 +1,21 @@
+# dienste.yaml – whoami zeigt den Consumer, admin-api schützt die Admin API (Tag 5)
+services:
+  - name: whoami
+    url: http://echo:8080/anything
+    routes:
+      - name: whoami
+        paths: [/whoami]
+    plugins:
+      - name: key-auth
+  - name: admin-api
+    url: http://127.0.0.1:8001
+    routes:
+      - name: admin-api
+        paths: [/admin-api]
+    plugins:
+      - name: basic-auth
+        config:
+          hide_credentials: true
+      - name: acl
+        config:
+          allow: [admins]

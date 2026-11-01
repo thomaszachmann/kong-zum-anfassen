@@ -1,0 +1,22 @@
+# oder.yaml – Schlüssel ODER Token, sonst Consumer gast (Tag 6)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $..routes[?(@.name=="notes-schreiben")]
+      - $.services[?(@.name=="whoami")]
+    overwrite: true
+    plugins:
+      - name: key-auth
+        config:
+          hide_credentials: true
+          anonymous: gast
+      - name: jwt
+        config:
+          anonymous: gast
+          claims_to_verify: [exp]
+  - selectors:
+      - $.services[?(@.name=="whoami")]
+    plugins:
+      - name: acl
+        config:
+          deny: [gast]

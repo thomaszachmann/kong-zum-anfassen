@@ -1,0 +1,75 @@
+# kong/compose.yaml – Kong OSS mit Postgres und eigenem Plugin (Stand Tag 11)
+name: kong
+
+x-kong-db: &kong-db
+  KONG_DATABASE: postgres
+  KONG_PG_HOST: kong-db
+  KONG_PG_USER: kong
+  KONG_PG_PASSWORD: lab-kong-pw-123
+  KONG_PG_DATABASE: kong
+
+services:
+  kong-db:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_PASSWORD: lab-kong-pw-123
+      POSTGRES_DB: kong
+    volumes:
+      - kong-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kong -d kong"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kong-migrations:
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    command: ["kong", "migrations", "bootstrap"]
+    environment: *kong-db
+    depends_on:
+      kong-db:
+        condition: service_healthy
+    restart: "no"
+
+  kong:
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    environment:
+      <<: *kong-db
+      KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
+      KONG_STATUS_LISTEN: "0.0.0.0:8100"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_PLUGINS: bundled,jwt-identity
+      KONG_LUA_PACKAGE_PATH: /kong-plugins/?.lua;;
+    ulimits:
+      nofile: 65536
+    volumes:
+      - .:/kong:ro
+      - ../plugins:/kong-plugins:ro   # eigene Plugins (Tag 11)
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8001:8001"
+      - "127.0.0.1:8002:8002"
+      - "127.0.0.1:8100:8100"
+    depends_on:
+      kong-migrations:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  kong-data:
+
+networks:
+  default:
+    name: lab
+    external: true

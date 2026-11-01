@@ -1,0 +1,16 @@
+# consumers.yaml – anna und ben mit Schlüsseln, Passwort und Gruppen (Tag 5)
+consumers:
+  - username: anna
+    keyauth_credentials:
+      - key: lab-key-anna-123
+    basicauth_credentials:
+      - username: anna
+        password: lab-user-pw-123
+    acls:
+      - group: schreiber
+      - group: admins
+  - username: ben
+    keyauth_credentials:
+      - key: lab-key-ben-123
+    acls:
+      - group: leser

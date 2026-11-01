@@ -1,0 +1,37 @@
+# kong/compose.yaml – Kong OSS ohne Datenbank (Tag 1)
+name: kong
+
+services:
+  kong:
+    image: ${KONG_IMAGE:-kong:3.9.4}
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yaml
+      KONG_PROXY_LISTEN: "0.0.0.0:8000, 0.0.0.0:8443 ssl"
+      KONG_ADMIN_LISTEN: "0.0.0.0:8001"
+      KONG_ADMIN_GUI_LISTEN: "0.0.0.0:8002"
+      KONG_STATUS_LISTEN: "0.0.0.0:8100"
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+    ulimits:
+      nofile: 65536            # sonst warnt Kong bei jedem Befehl
+    volumes:
+      - .:/kong:ro              # ganzes Verzeichnis, nicht nur die Datei
+    ports:
+      - "8000:8000"
+      - "8443:8443"
+      - "127.0.0.1:8001:8001"   # Admin API nur lokal
+      - "127.0.0.1:8002:8002"   # Kong Manager nur lokal
+      - "127.0.0.1:8100:8100"   # Status
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+networks:
+  default:
+    name: lab
+    external: true

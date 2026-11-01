@@ -1,0 +1,12 @@
+# cors.yaml – CORS am Service notes (Tag 4)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $.services[?(@.name=="notes")]
+    plugins:
+      - name: cors
+        config:
+          origins: ["http://localhost:3000"]
+          methods: ["GET", "POST"]
+          headers: ["Content-Type", "X-API-Key"]
+          max_age: 600

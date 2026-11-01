@@ -1,0 +1,18 @@
+# auth.yaml – Schreiben nur mit Schlüssel und Gruppe schreiber (Tag 5)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $..routes[?(@.name=="notes-schreiben")]
+    plugins:
+      - name: key-auth
+        config:
+          hide_credentials: true
+      - name: acl
+        config:
+          allow: [schreiber]
+      - name: request-transformer
+        config:
+          remove:
+            headers: ["X-API-Key"]
+          add:
+            headers: ["X-API-Key:lab-api-key-123"]

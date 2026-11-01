@@ -1,0 +1,29 @@
+{
+  "realm": "lab",
+  "enabled": true,
+  "accessTokenLifespan": 60,
+  "clients": [
+    {
+      "clientId": "notes-cli",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "lab-client-secret-123",
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "anna",
+      "enabled": true,
+      "email": "anna@kong.lab",
+      "emailVerified": true,
+      "firstName": "Anna",
+      "lastName": "Lab",
+      "credentials": [
+        { "type": "password", "value": "lab-user-pw-123", "temporary": false }
+      ]
+    }
+  ]
+}

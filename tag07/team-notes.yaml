@@ -1,0 +1,14 @@
+# team-notes.yaml – nur die Objekte mit Tag team-notes (Tag 7, Drill 6)
+_format_version: "3.0"
+_info:
+  select_tags:
+    - team-notes
+services:
+  - name: notes-version
+    url: http://notes-api:8080/version
+    connect_timeout: 2000
+    read_timeout: 3000
+    routes:
+      - name: notes-version
+        paths: [/api/v1/version]
+        methods: [GET]

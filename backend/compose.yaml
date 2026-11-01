@@ -1,0 +1,52 @@
+# backend/compose.yaml – das Backend hinter Kong (Tag 0)
+name: backend
+
+services:
+  db:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: notes
+      POSTGRES_PASSWORD: lab-db-pw-123
+      POSTGRES_DB: notes
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notes -d notes"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    image: notes-api:0.2.0
+    command: ["migrate"]
+    environment: &api-env
+      NOTES_API_KEY: lab-api-key-123
+      NOTES_DB_URL: postgres://notes:lab-db-pw-123@db:5432/notes
+    depends_on:
+      db:
+        condition: service_healthy
+
+  notes-api:
+    image: notes-api:0.2.0
+    environment: *api-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  notes-api-2:          # zweite Instanz, neue Version, für Load Balancing (Tag 9)
+    image: notes-api:0.3.0
+    environment: *api-env
+    profiles: ["lb"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  echo:                 # zeigt, welche Header beim Backend ankommen
+    image: ghcr.io/mccutchen/go-httpbin:2.26.0
+
+volumes:
+  db-data:
+
+networks:
+  default:
+    name: lab

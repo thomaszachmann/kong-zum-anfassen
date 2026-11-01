@@ -1,0 +1,26 @@
+# notes-openapi.yaml – OpenAPI-Beschreibung von notes-api (Tag 3)
+openapi: 3.0.3
+x-kong-name: notes-v2
+info:
+  title: notes
+  version: 0.2.0
+servers:
+  - url: http://notes-api:8080
+paths:
+  /notes:
+    get:
+      operationId: notes-lesen
+      responses:
+        "200":
+          description: Liste aller Notizen
+    post:
+      operationId: notes-schreiben
+      responses:
+        "201":
+          description: Notiz angelegt
+  /version:
+    get:
+      operationId: version
+      responses:
+        "200":
+          description: Version der API

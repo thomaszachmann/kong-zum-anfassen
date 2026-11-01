@@ -1,0 +1,11 @@
+# cache.yaml – Antworten der Route notes-lesen 30 s im Speicher halten (Tag 4)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $..routes[?(@.name=="notes-lesen")]
+    plugins:
+      - name: proxy-cache
+        config:
+          strategy: memory
+          cache_ttl: 30
+          content_type: ["application/json"]

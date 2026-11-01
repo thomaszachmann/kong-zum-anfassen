@@ -1,0 +1,10 @@
+# upstream.yaml – zwei Instanzen von notes-api hinter einem Upstream (Tag 9)
+_format_version: "3.0"
+upstreams:
+  - name: notes-up
+    algorithm: round-robin
+    targets:
+      - target: notes-api:8080
+        weight: 100
+      - target: notes-api-2:8080
+        weight: 100

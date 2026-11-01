@@ -1,0 +1,11 @@
+# limit-lesen.yaml – Lesen: 5 Anfragen pro Minute und Client-IP (Tag 8)
+_format_version: "1.0"
+add-plugins:
+  - selectors:
+      - $..routes[?(@.name=="notes-lesen")]
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 5
+          policy: local
+          limit_by: ip
